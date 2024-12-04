@@ -4,7 +4,7 @@
 #include <string.h> // for string manipulations
 #include <unistd.h> // for sleep()
 #include <time.h> // for random numbers to be randomize more than once.
-// #include <conio.h> // if getch() doesn't work include this
+#include <conio.h> // if getch() doesn't work include this
 
 /*/
  * Simple Pokemon Game
@@ -14,19 +14,24 @@
 
 // Global variables:
 
-int candy = 0;
+const int pokemonMaxHP = 100;
+int candy = 20;
 int money = 0, choice, action;
-int pokemonLevel = 6, pokemonExp = 0, pokemonHP = 100;
+int pokemonLevel = 1, pokemonExp = 0, pokemonHP, evolved = 0, evolvedAgain = 0;
 int charmander = 0, charmeleon = 0, charizard = 0, bulbasaur = 0, ivysaur = 0, venusaur = 0, squirtle = 0, wartortle = 0, blastoise = 0, pikachu = 0, magikarp = 0, treecko = 0, rapidash = 0, arbok = 0, pidgey = 0, nidoran = 0; // for pokedex
 char starterPokemon[20];
 char name[11];
 char confirm;
+char *moveset[] = {"Tackle", "Scratch", "Spit", "Dirt Throw"};
+
+
 
 // Function declarations:
 
 void clearBuffer();
 void wipe();
 void evolution();
+void evoAndLevel();
 void adventure(); //
 void venture(); // random encounters or bonuses
 int training(int level); // get exp based on 5% to 10% of exp cap
@@ -35,14 +40,14 @@ void battleCrissa();
 void battleLyca();
 void battleSheba();
 void battleKent();
-void battleMaybelle();
+void battleRival();
 void pokedex();
 void pokeMart();
 void profile();
 int levelingFormula(int N);
+void showMoves();
 
 int main() {
-    int evolved = 0;
     srand(time(NULL)); // to seed(not the sus one) em random numbers
 
     printf("Enter name: ");
@@ -94,37 +99,19 @@ int main() {
     wipe();
 
     do {
-        while (pokemonExp >= levelingFormula(pokemonLevel)) { // Handle evolutions and leveling
-        pokemonExp = 0;
-        pokemonLevel++;
-        printf("Your %s leveled up!\n", starterPokemon);
-        }
-
-        if (pokemonLevel == 16 && evolved == 0) {
-        printf("Hold on\n");
-        sleep(2);
-        printf("Something is happening to your %s, it seems to be glowing in such resplendent light!\n", starterPokemon);
-        sleep(3);
-        printf("Oh what's this? It's actually evolving!\n");
-        sleep(3);
-        printf("Your %s evolved into ", starterPokemon);
-        evolution();
-        printf("%s!\n", starterPokemon);
-        evolved = 1;
-        wipe();
-        }
+        evoAndLevel();
 
         puts("[1] Adventure");
         puts("[2] Pokedex");
         puts("[3] PokeMart");
         puts("[4] Profile");
         printf("Enter action: ");
-        scanf("%d", &action);
+
+        if (scanf("%d", &action) != 1) {
+            while(getchar() != '\n');
+        }
 
         switch (action) {
-            case 0:
-                puts("You have exited.");
-                break;
             case 1:
                 adventure();
                 break;
@@ -139,11 +126,12 @@ int main() {
                 break;
             default:
                 puts("Invalid action. Please repeat.");
+                wipe();
                 break;
         }
 
 
-    } while (action != 0);
+    } while (1);
 
 
     return 0;
@@ -155,7 +143,6 @@ void clearBuffer() {
 }
 
 void wipe() {
-    //sleep(1);
     system("cls"); // "clear" if "cls" doesn't work.
 }
 
@@ -172,7 +159,7 @@ void evolution() {
             wartortle = 1;
         }
     }
-    
+
     if (pokemonLevel == 32) {
         if (choice == 1) {
             snprintf(starterPokemon, sizeof(starterPokemon), "Charizard");
@@ -185,6 +172,40 @@ void evolution() {
             blastoise = 1;
         }
     }
+}
+
+void evoAndLevel() {
+    while (pokemonExp >= levelingFormula(pokemonLevel)) { // Handle evolutions and leveling
+        pokemonExp = 0;
+        pokemonLevel++;
+        printf("Your %s leveled up!\n", starterPokemon);
+        }
+
+        if (pokemonLevel == 16 && evolved == 0) {
+            printf("Hold on\n");
+            sleep(2);
+            printf("Something is happening to your %s, it seems to be glowing in such resplendent light!\n", starterPokemon);
+            sleep(3);
+            printf("Oh what's this? It's actually evolving!\n");
+            sleep(3);
+            printf("Your %s evolved into ", starterPokemon);
+            evolution();
+            printf("%s!\n", starterPokemon);
+            evolved = 1;
+            getch();
+            wipe();
+        } else if (pokemonLevel == 32 && evolvedAgain == 0) {
+            printf("Oh damn your %s is glowing again!\n", starterPokemon);
+            sleep(2);
+            printf("Color me surprise! This glow is even brighter than its previous evolution, is this perhaps its final evolution?\n");
+            sleep(3);
+            printf("*zzziing* Your %s evolved into ", starterPokemon);
+            evolution();
+            printf("%s!\n", starterPokemon);
+            evolvedAgain = 1;
+            getch();
+            wipe();
+        }
 }
 
 void adventure() {
@@ -226,7 +247,7 @@ void adventure() {
 
     }
 
-
+    getch();
     wipe();
 }
 
@@ -314,7 +335,7 @@ void battleKent() {
 
 }
 
-void battleMaybelle() {
+void battleRival() {
 
 }
 
@@ -401,19 +422,156 @@ void pokedex() {
 }
 
 void pokeMart() {
+    wipe();
+    int product, quantity, choice, cost;
+    char confirm;
 
+    while (1) {  // Loop for repeated purchases until the user exits
+        printf("Pika! Welcome to the PokeMart!\n");
+        printf("|| \tOur Products:\n");
+        printf("[1] Maybelle's Candy - $100 - Level Up your Pokemon\n");
+        printf("[2] Pokemon-Inspired Outfits\n");
+        printf("[3] Exit\n");
+        printf("\nWhich product do you want? ");
+        if (scanf("%d", &product) != 1) {  // Validate input
+            printf("Invalid input, please try again.\n");
+            getch();
+            wipe();
+            while(getchar() != '\n');  // Clear input buffer
+            continue;
+        }
+
+        switch (product) {
+            case 1:  // Candy
+                printf("How many candies do you want? ");
+                if (scanf("%d", &quantity) != 1) {
+                    printf("Invalid quantity.\n");
+                    while(getchar() != '\n');
+                    break;
+                }
+                cost = quantity * 100;
+                if (quantity > 0 && money >= cost) {
+                    printf("You bought %d Maybelle's Candy! Your %s will love it!\n", quantity, starterPokemon);
+                    money -= cost;
+                    candy += quantity;
+                } else if (quantity <= 0) {
+                    printf("Invalid quantity. Enter positive\n");
+                    getch();
+                } else {
+                    printf("You don't have enough money lmao.\n");
+                    getch();
+                }
+                break;
+
+            case 2:  // Outfit
+                printf("Available Outfits:\n");
+                printf("[1] Kigurumi (Onesies)\n");
+                printf("[2] Gijinka (Humanized Pokemon)\n");
+                printf("[3] Eevee Evolutions\n");
+                printf("Which outfit do you want? ");
+                if (scanf("%d", &choice) != 1) {
+                    printf("Invalid input.\n");
+                    while(getchar() != '\n');
+                    break;
+                }
+
+                switch (choice) {
+                    case 1:
+                        printf("[Y/N] Are you ready to gear up with the Kigurumi (Onesies) outfit? ");
+                        scanf(" %c", &confirm);
+                        if (confirm == 'Y' || confirm == 'y') {
+                            printf("You bought the Kigurumi (Onesies) outfit successfully!\n");
+                        } else {
+                            printf("Purchase cancelled.\n");
+                        }
+                        break;
+
+                    case 2:
+                        printf("[Y/N] Would you like to channel your inner Pokemon with this outfit? ");
+                        scanf(" %c", &confirm);
+                        if (confirm == 'Y' || confirm == 'y') {
+                            printf("You bought the Gijinka (Humanized Pokemon) outfit successfully!\n");
+                        } else {
+                            printf("Purchase cancelled.\n");
+                        }
+                        break;
+
+                    case 3:
+                        printf("[Y/N] Are the Eevee Evolutions the perfect choice for your adventure? ");
+                        scanf(" %c", &confirm);
+                        if (confirm == 'Y' || confirm == 'y') {
+                            printf("You bought the Eevee Evolutions outfit successfully!\n");
+                        } else {
+                            printf("Purchase cancelled.\n");
+                        }
+                        break;
+
+                    default:
+                        printf("Invalid Pokemon Outfit.\n");
+                }
+                break;
+
+            case 3:  // Exit
+                printf("Thank you for visiting the PokeMart! See you next time!\n");
+                getch();
+                wipe();
+                return;
+
+            default:
+                printf("Invalid product choice. Please select a valid option.\n");
+        }
+
+        wipe();  // Reset the interface for the next user interaction
+    }
+        wipe();  // Reset the interface for the next user interaction
 }
 
 void profile() {
+    int itemSelect;
     wipe();
     puts("----Profile----");
     printf("Trainer Name: %s\n", name);
-    printf("Money: $%d\n", money);
-    printf("%s Level: %d [%d/%d]\n", starterPokemon, pokemonLevel, pokemonExp, levelingFormula(pokemonLevel));
-    printf("Bag: \n");
+    printf("Money: $%d\n\n", money);
+
+    printf("%s  --  Level: %d [%d/%d]  --  MaxHP: %d\n", starterPokemon, pokemonLevel, pokemonExp, levelingFormula(pokemonLevel), pokemonMaxHP);
+    printf("Moves:\n");
+    showMoves();
+
+    printf("\nBag: \n");
 
     if (candy > 0) {
-        printf("Candy: %d", candy);
+        printf("[1] Candy: %d", candy);
+    }
+
+    printf("\n[0 - exit] Select item: ");
+    if (scanf("%d", &itemSelect) != 1) {
+        while(getchar() != '\n');
+        printf("Invalid item.\n");
+        getch();
+        return;
+    }
+
+    if (itemSelect == 0) {
+        wipe();
+        return;
+    } else if (itemSelect == 1 && candy > 0) {
+        printf("[y/n] Confirm use candy? ");
+
+        if (scanf(" %c", &confirm) != 1) {
+            printf("Invalid confirmation.\n");
+            while(getchar() != '\n');
+            getch();
+            wipe();
+            return;
+        }
+
+        if (confirm == 'Y' || confirm == 'y') {
+            printf("Your %s gobbled the candy in one bite!", starterPokemon);
+            pokemonLevel += 1;
+            candy -= 1;
+        }
+    } else {
+        printf("You don't have such an item. Buy it lol.");
     }
 
     getch();
@@ -425,5 +583,11 @@ int levelingFormula(int n) {
         return (int)(4 * pow(n, 3)) / 5;
     } else {
         return 100;
+    }
+}
+
+void showMoves() {
+    for (int i = 0; i < 4; i++) {
+        printf("%d. %s\n", i + 1, moveset[i]);
     }
 }
